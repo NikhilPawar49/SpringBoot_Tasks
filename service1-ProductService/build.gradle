@@ -1,46 +1,86 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.5.7'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'org.springframework.boot' version '3.5.7'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id "org.openapi.generator" version "7.4.0"
 }
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
-description = 'Demo project for Spring Boot'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
-}
-
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
+}
+
+ext {
+    openApiVersion = "6.2.1"
+    jacksonDataNullVersion = "0.2.4"
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    runtimeOnly 'com.h2database:h2'
+
+    implementation "org.openapitools:jackson-databind-nullable:${jacksonDataNullVersion}"
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+
+    implementation ("org.openapitools:openapi-generator:${openApiVersion}") {
+        exclude module: "slf4j-simple"
+    }
 
     compileOnly 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
 
-    runtimeOnly 'com.h2database:h2'
-
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testCompileOnly 'org.projectlombok:lombok:1.18.34'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
-
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+sourceSets {
+    main {
+        java {
+            srcDirs += ["${buildDir}/openapi/src/main/java"]
+        }
+    }
+}
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
+
+openApiGenerate {
+    generatorName = "spring"
+    inputSpec = "$projectDir/api-specs/api.yaml"
+    outputDir = "$buildDir/openapi"
+
+    apiPackage = "com.example.product.api"
+    modelPackage = "com.example.product.model"
+
+    globalProperties = [
+            apis            : "",
+            models          : "",
+            supportingFiles : "ApiUtil.java"
+    ]
+
+    configOptions = [
+            interfaceOnly        : "true",
+            useSpringBoot3       : "true",
+            useTags              : "true",
+            skipDefaultInterface : "false"
+    ]
+
+    generateModelTests = false
+    generateApiTests = false
+    generateApiDocumentation = false
+    generateModelDocumentation = false
+}
+
+tasks.compileJava.dependsOn(tasks.openApiGenerate)

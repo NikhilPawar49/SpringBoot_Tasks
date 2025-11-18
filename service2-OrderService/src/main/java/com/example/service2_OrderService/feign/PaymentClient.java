@@ -5,7 +5,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "payment-service", url = "http://localhost:8083/payment")
+@FeignClient(name = "payment-service", url = "http://localhost:8085/payment")
 public interface PaymentClient {
 
     @PostMapping("/pay")
