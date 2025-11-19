@@ -19,7 +19,6 @@ public class JobController {
         JobParameters params = new JobParametersBuilder()
                 .addLong("time", System.currentTimeMillis())
                 .toJobParameters();
-
         jobLauncher.run(importEmployeeJob, params);
         return "Batch Job Started!";
     }
